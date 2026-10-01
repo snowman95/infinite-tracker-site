@@ -16,24 +16,32 @@
     <p>요청하지 않은 메일이라면 이 페이지를 닫아주세요.</p>
   </main>
   <script>
-    const params = new URLSearchParams(location.hash.slice(1));
-    const token = params.get('token_hash');
-    const type = params.get('type');
-    history.replaceState(null, '', location.pathname);
     const button = document.getElementById('confirm');
-    if (token && /^[a-f0-9]{56,64}$/.test(token) && ['signup', 'recovery'].includes(type)) {
-      document.getElementById('heading').textContent = type === 'recovery' ? '비밀번호 재설정' : '이메일 확인';
-      button.disabled = false;
-      button.addEventListener('click', () => {
-        button.disabled = true;
-        button.textContent = '앱으로 연결 중…';
-        const url = new URL('https://phxilclqfhakirwznknr.supabase.co/auth/v1/verify');
-        url.search = new URLSearchParams({ token, type, redirect_to: 'infinitetracker://auth-callback' });
-        location.assign(url.href);
-      }, { once: true });
-    } else {
-      document.getElementById('message').textContent = '유효한 확인 링크가 없습니다. 앱에서 확인 또는 재설정 메일을 다시 요청해주세요.';
+    function receiveLink() {
+      const params = new URLSearchParams(location.hash.slice(1));
+      const token = params.get('token_hash');
+      const type = params.get('type');
+      history.replaceState(null, '', location.pathname);
+      button.disabled = true;
+      button.onclick = null;
+      button.textContent = '앱에서 계속하기';
+      if (token && /^[a-f0-9]{56,64}$/.test(token) && ['signup', 'recovery'].includes(type)) {
+        document.getElementById('heading').textContent = type === 'recovery' ? '비밀번호 재설정' : '이메일 확인';
+        document.getElementById('message').textContent = 'Infinite Tracker가 설치된 아이폰에서 아래 버튼을 눌러주세요.';
+        button.disabled = false;
+        button.onclick = () => {
+          button.disabled = true;
+          button.textContent = '앱으로 연결 중…';
+          const url = new URL('https://phxilclqfhakirwznknr.supabase.co/auth/v1/verify');
+          url.search = new URLSearchParams({ token, type, redirect_to: 'infinitetracker://auth-callback' });
+          location.assign(url.href);
+        };
+      } else {
+        document.getElementById('message').textContent = '유효한 확인 링크가 없습니다. 앱에서 확인 또는 재설정 메일을 다시 요청해주세요.';
+      }
     }
+    receiveLink();
+    window.addEventListener('hashchange', receiveLink);
   </script>
 </body>
 </html>
